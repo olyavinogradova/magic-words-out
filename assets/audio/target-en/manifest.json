@@ -1,0 +1,56 @@
+{
+  "pack": "target",
+  "lang": "en",
+  "voices": {
+    "mom-en": {
+      "pitch": 1.0,
+      "rate": 0.75
+    },
+    "daughter": {
+      "pitch": 1.3,
+      "rate": 0.95
+    },
+    "monster": {
+      "pitch": 0.9,
+      "rate": 0.6,
+      "male": true
+    }
+  },
+  "lines": {
+    "wow": {
+      "speaker": "daughter",
+      "text": "Oh!",
+      "audio": null
+    },
+    "w1": {
+      "speaker": "mom-en",
+      "text": "What's",
+      "audio": null
+    },
+    "w2": {
+      "speaker": "mom-en",
+      "text": "your",
+      "audio": null
+    },
+    "w3": {
+      "speaker": "mom-en",
+      "text": "name",
+      "audio": null
+    },
+    "whole": {
+      "speaker": "mom-en",
+      "text": "What's your name?",
+      "audio": null
+    },
+    "boo-reply": {
+      "speaker": "monster",
+      "text": "I'm Boo!",
+      "audio": null
+    },
+    "chick-reply": {
+      "speaker": "monster",
+      "text": "I'm Chick!",
+      "audio": null
+    }
+  }
+}

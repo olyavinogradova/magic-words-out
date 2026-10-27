@@ -1,0 +1,17 @@
+{
+  "pack": "native",
+  "lang": "ru",
+  "voices": { "mom": { "pitch": 1.05, "rate": 0.92 }, "daughter": { "pitch": 1.35, "rate": 1.0 } },
+  "lines": {
+    "walk-intro": { "speaker": "mom", "text": "Пойдём гулять!", "audio": null },
+    "wow": { "speaker": "daughter", "text": "Ой!", "audio": null },
+    "walk-resume": { "speaker": "mom", "text": "Идём дальше!", "audio": null },
+    "finish": { "speaker": "mom", "text": "Ура! Мы прошли весь лес!", "audio": null },
+    "intro": { "speaker": "mom", "text": "Не бойся, я рядом. Давай спросим, как его зовут. Повторяй за мной!", "audio": null },
+    "intro2": { "speaker": "mom", "text": "Давай и его спросим, как тебя зовут!", "audio": null },
+    "miss": { "speaker": "mom", "text": "Почти получилось! Слушай ещё раз.", "audio": null },
+    "tap-stone": { "speaker": "mom", "text": "Нажми на волшебный камушек!", "audio": null },
+    "praise": { "speaker": "mom", "text": "Ура! Ты справилась! Он стал добрым!", "audio": null },
+    "praise2": { "speaker": "mom", "text": "Ещё один новый друг. У тебя получается всё лучше!", "audio": null }
+  }
+}
