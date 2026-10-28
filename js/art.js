@@ -69,6 +69,13 @@ const DEFS = {
     frames: ['cover.png'],
     sheets: [],
   },
+  buttons: {
+// phone touch controls (back · fwd · jump) — drawn by the DOM buttons in
+// index.html (js/controls.js), not the canvas; missing files fall back to
+// procedural SVG arrows.
+    frames: ['buttons_back.png', 'buttons_fwd.png', 'buttons_jump.png'],
+    sheets: [],
+  },
 };
 
 const ART_DIR = 'assets/art/';
@@ -96,11 +103,17 @@ export const art = {
       // that need ready() have no sheets)
       let settle0;
       entry.settled = new Promise(r => { settle0 = r; });
+      // resolves once EVERY frame settled (loaded or missing) — callers that
+      // consume whole frames arrays gate on this, not on settled
+      let settleAll;
+      entry.all = new Promise(r => { settleAll = r; });
+      let pending = def.frames.length;
+      const oneSettled = () => { if (--pending === 0) settleAll(entry.imgs.every(Boolean)); };
       loaded[name] = entry;
       def.frames.forEach((file, i) => {
         tryImage(ART_DIR + file)
-          .then(img => { entry.imgs[i] = img; bakes.clear(); if (i === 0) settle0(true); })
-          .catch(() => { if (i === 0) settle0(false); });
+          .then(img => { entry.imgs[i] = img; bakes.clear(); if (i === 0) settle0(true); oneSettled(); })
+          .catch(() => { if (i === 0) settle0(false); oneSettled(); });
       });
       // also try a whole sheet covering all frames (sliced at runtime)
       (async () => {
@@ -127,6 +140,10 @@ export const art = {
   // Frame 0's own file settled: true = loaded, false = missing. Lets callers
   // choose art-driven UI vs fallback WITHOUT racing the async load.
   ready(name) { return loaded[name]?.settled ?? Promise.resolve(false); },
+
+  // Every frame of `name` settled (loaded or missing); true = ALL loaded.
+  // `loaded` is undefined until art.load() ran — resolves false then.
+  all(name) { return loaded[name]?.all ?? Promise.resolve(false); },
 
   // The baked offscreen canvas for a frame at a given display height (CSS px).
   baked(name, i, img, h) {

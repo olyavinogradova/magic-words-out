@@ -1,13 +1,18 @@
 // input.js — unified pointer/touch + keyboard.
-// While walking: hold a screen half to walk; jump is KEYBOARD ONLY —
-// Space / ⬆ / W. On the start screen Space/Enter press the cover's cloud
-// button (⬆/W deliberately don't). During the encounter: taps hit word
+// While walking: hold a screen half to walk (phones also get the corner
+// buttons, js/controls.js); jump is keyboard-only on desktop — Space / ⬆ /
+// W. On the start screen Space/Enter press the cover's cloud button
+// (⬆/W deliberately don't). During the encounter: taps hit word
 // stones; Enter or a jump key (Space/⬆/W) taps the active stone (desktop)
 // — the kid never needs the touchpad.
+import { view, toVirtual } from './view.js';
+
 export function initInput(canvas, ui, walk) {
+  // pointer coords arrive in SCREEN px — map them into stage px (the stage
+  // may be scaled and rotated on portrait screens)
   const pos = e => {
-    const r = canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height };
+    const v = toVirtual(e.clientX, e.clientY);
+    return { x: v.x, y: v.y, w: view.W, h: view.H };
   };
 
   canvas.addEventListener('pointerdown', e => {
@@ -49,6 +54,8 @@ export function initInput(canvas, ui, walk) {
       return;
     }
     if (e.key === 'Enter' && ui.onPrimary) { e.preventDefault(); ui.onPrimary(e.code); }
+    // Q — the parent's secret word skip (no hint anywhere in the game UI)
+    if (e.code === 'KeyQ' && ui.onSecret) { e.preventDefault(); ui.onSecret(); }
   });
   window.addEventListener('keyup', e => {
     const k = KEYMAP[e.code];

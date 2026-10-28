@@ -7,6 +7,7 @@ import { voice } from './voice.js';
 import { speech } from './speech.js';
 import { fx } from './fx.js';
 import { delay } from './util.js';
+import { view } from './view.js';
 import { LEVEL_1 } from '../data/levels.js';
 
 // the breathing beat between the girl's «Ой» and mom's answer — the calm
@@ -155,7 +156,7 @@ export class Encounter {
     if (this.walk) this.walk.girlComeForward(120);
     this.players.setPoses('idle', 'idle');
     voice.sfx('fanfare');
-    fx.confetti(window.innerWidth / 2, window.innerHeight * 0.3);
+    fx.confetti(view.W / 2, view.H * 0.3);
     await voice.speak('native', this.lines.praise);
     if (!alive()) return;
     // The encounter ends here — main resumes the walk (the level's own
@@ -201,5 +202,19 @@ export class Encounter {
     this._tapResolve = null;
     this.ui.micState('off');
     r();
+  }
+
+// The parent's secret skip (Q): accepts the current word through the SAME
+// paths a real answer takes — a matched recognition while listening, the
+// tap fallback otherwise. No on-screen hint: the kid cannot read anyway.
+  devAccept() {
+    if (this.phase === 'listen') {
+      return speech.inject(LEVEL_1.words[this.wordIndex].text);
+    }
+    if (this.phase === 'tap-ready' && this._tapResolve) {
+      this.onStoneTap(this.wordIndex);
+      return true;
+    }
+    return false;
   }
 }

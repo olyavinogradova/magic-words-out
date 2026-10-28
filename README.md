@@ -14,10 +14,10 @@ child repeats English words after her mom and the monsters).
 - **Online:** https://olyavinogradova.github.io/magic-words-out/
 
 Desktop **Chrome** is the supported browser (speech recognition uses its Web
-Speech API). The child plays with voice and taps; jumping between the high
-barriers is keyboard-only (Space / ↑ / W), so a grown-up may need to help.
-On tablets and phones the microphone works over https, but there is no touch
-jump — desktop is how the game is meant to be played.
+Speech API). The child plays with voice and taps; on desktop, jumping between
+the high barriers is keyboard-only (Space / ↑ / W), so a grown-up may need to
+help. On phones and tablets the game shows on-screen walk and jump buttons;
+the microphone works over https.
 
 ## Microphone & privacy
 

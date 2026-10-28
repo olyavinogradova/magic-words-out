@@ -3,6 +3,7 @@
 // dashes forward to shield) → the encounter → walk resumes → finish gate →
 // "play again" resets the whole level.
 import { updateTweens, TEST, clamp, GROUND_Y, PLANT_PX } from './util.js';
+import { view, layoutViewport } from './view.js';
 import { voice } from './voice.js';
 import { speech, matchWord } from './speech.js';
 import { art } from './art.js';
@@ -13,19 +14,28 @@ import { Monster } from './monster.js';
 import { UI } from './ui.js';
 import { Walk } from './walk.js';
 import { initInput } from './input.js';
+import { initControls } from './controls.js';
 import { Encounter } from './encounter.js';
 import { LEVEL_1 } from '../data/levels.js';
 
+const stage = document.getElementById('stage');
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-let W = 0, H = 0;
+let W = 0, H = 0, innerW = 0, innerH = 0;
+
+// ?vw=&vh= forces a viewport (device-framing preview on desktop)
+const FORCE_W = +(new URLSearchParams(location.search).get('vw')) || 0;
+const FORCE_H = +(new URLSearchParams(location.search).get('vh')) || 0;
 
 function resize() {
+  innerW = FORCE_W || window.innerWidth;
+  innerH = FORCE_H || window.innerHeight;
+  layoutViewport(stage, canvas, innerW, innerH);
+  W = view.W; H = view.H; // VIRTUAL stage size — everything draws in stage px
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  W = window.innerWidth; H = window.innerHeight;
-  canvas.width = Math.round(W * dpr);
-  canvas.height = Math.round(H * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.width = Math.round(W * dpr * view.s);
+  canvas.height = Math.round(H * dpr * view.s);
+  ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, 0, 0);
   art.clearBakes(); // baked frames depend on viewport-scaled heights
 }
 window.addEventListener('resize', resize);
@@ -107,10 +117,12 @@ ui.onPrimary = (code) => {
   }
   if (activeEncounter.phase === 'tap-ready') activeEncounter.onStoneTap(activeEncounter.wordIndex);
 };
+ui.onSecret = () => activeEncounter.devAccept();
 initInput(canvas, ui, walk);
 
 const voiceReady = voice.init();
 art.load();
+const updateControls = initControls(walk); // phone buttons — after art.load(), the art swap keys on it
 
 function startGame() {
   started = true; // draw the players again + lift the scene blur
@@ -127,9 +139,10 @@ ui.showStart(startGame);
 let started = false;
 canvas.classList.add('blur');
 
-// loop
+// loop — tick(now) holds the whole frame body so the test API can step it
+// (boo.step) without depending on the browser scheduling real frames
 let last = performance.now();
-function frame(now) {
+function tick(now) {
   const dt = clamp(now - last, 0, 50);
   last = now;
   const t = now / 1000;
@@ -137,11 +150,13 @@ function frame(now) {
 // self-heal viewport capture: some webviews settle their size after load
 // without firing a resize event — W drives the encounter trigger, so a
 // stale value misplaces it
-  if (window.innerWidth !== W || window.innerHeight !== H) resize();
+  if ((FORCE_W || window.innerWidth) !== innerW ||
+      (FORCE_H || window.innerHeight) !== innerH) resize();
 
   updateTweens(dt);
   ui.update(dt);
   walk.update(dt, W, H);
+  updateControls(walk.phase);
   fx.update(dt);
 
   ctx.save();
@@ -162,7 +177,9 @@ function frame(now) {
   }
   fx.draw(ctx);
   ctx.restore();
-
+}
+function frame(now) {
+  tick(now);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -198,6 +215,13 @@ window.boo = {
   hold(dir) { walk.setKey(dir === 'left' ? 'left' : 'right', true); },
   release() { walk.setKey('left', false); walk.setKey('right', false); walk.pointers.clear(); walk.applyInputs(); },
   jump() { walk.jumpPulse = true; },
+  // advance the game by n synthetic frames (~16.7 ms each) — the test drive
+  // runs on this instead of real time, so a suspended browser pane cannot
+  // stall it; wall-clock timers (test-mode TTS lines) degrade it gracefully
+  step(n = 1, dtMs = 16.7) {
+    for (let i = 0; i < n; i++) tick(last + Math.min(50, dtMs));
+    return this.state();
+  },
 };
 
 window.addEventListener('error', e => {

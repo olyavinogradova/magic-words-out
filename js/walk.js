@@ -1,7 +1,9 @@
 // walk.js — the walking world. The DAUGHTER leads (she is the player):
-// hold a screen half / arrow key to walk, Space / ⬆ / W to jump. There is
-// no on-screen jump button — jumping is keyboard-only, and since barriers
-// block nobody, jumping is optional gem play. Mom follows on a breadcrumb
+// hold a screen half / arrow key / on-screen arrow button to walk, Space /
+// ⬆ / W or the jump button to jump (desktop keeps keyboard-only; the
+// buttons are a coarse-pointer/phone affordance — js/controls.js feeds the
+// same pointers map below, so an encounter freeze releases a held button
+// together with the touch zones). Mom follows on a breadcrumb
 // trail on the ground (she replays the girl's PATH but never her jumps —
 // and has no prop logic at all: she walks past every barrier). When the
 // girl walks BACK and reaches her, mom turns with her, waits for the
@@ -116,8 +118,8 @@ export class Walk {
 
   // --- input (pointer zones + keyboard + test API all merge here)
   hitZone(x, y, W, H) {
-// no on-screen jump button — the whole right half walks right; jump is
-// keyboard-only
+// the canvas zones stay buttonless: the whole half walks; the on-screen
+// arrows/jump live in the DOM corners (js/controls.js), only on touch
     return x < W / 2 ? 'left' : 'right';
   }
 
@@ -134,6 +136,17 @@ export class Walk {
   }
 
   pointerUp(id) { this.pointers.delete(id); this.applyInputs(); }
+
+// on-screen control buttons (js/controls.js) hold a zone by a synthetic
+// string id — the touch path, so startArrive()'s pointers.clear() releases
+// a held button when input freezes
+  btnDown(id, zone) {
+    if (this.phase !== 'walk') return;
+    this.pointers.set(id, zone);
+    this.applyInputs();
+  }
+
+  btnUp(id) { this.pointers.delete(id); this.applyInputs(); }
 
   setKey(name, down) { this.keys[name] = !!down; this.applyInputs(); }
 
@@ -352,7 +365,10 @@ export class Walk {
     if (this.phase !== 'walk') return;
     const next = D.encounters[this.encIndex];
     if (!this.marks && next) {
-      const trig = next.x - Math.max(560, W * 0.36 + Math.min(W, H) * 0.075 + 90);
+      // the reveal distance is a design constant (how far ahead the monster
+      // sits when the walk freezes), not a screen fraction — a wide viewport
+      // must not fire the encounter earlier and steal the barrier sections
+      const trig = next.x - Math.min(Math.max(560, W * 0.36 + Math.min(W, H) * 0.075 + 90), 640);
 // Fire only from the GROUND: the arrive sequence and the encounter layout
 // assume ground level, and the girl can cross the trigger line mid-fall
 // off a barrier rim — she'd slide to her mark floating. Waiting for her
@@ -512,9 +528,9 @@ export class Walk {
 
   drawUI(ctx, W, H, t) {
     if (this.phase !== 'walk') return;
-// no jump button here anymore — jump is Space / ⬆ / W (input.js). Drawn
-// controls: just the start chevrons until the first move: pulsing "go
-// right" chevrons (audio line covers the rest)
+// canvas-drawn controls: just the start chevrons until the first move —
+// pulsing "go right" chevrons (the touch buttons are DOM, js/controls.js;
+// the audio line covers the rest)
     if (!this.moved) {
       const p = (t * 0.9) % 1;
       ctx.save();
