@@ -16,15 +16,20 @@ export function initControls(walk) {
   const btns = defs.map(([id, zone, frame]) => {
     const el = document.getElementById(id);
     const bid = 'ctl:' + zone; // synthetic pointer id in walk.pointers
+    const press = () => { el.classList.add('pressed'); walk.btnDown(bid, zone); };
+    const release = () => { el.classList.remove('pressed'); walk.btnUp(bid); };
     el.addEventListener('pointerdown', e => {
       e.preventDefault();
       try { el.setPointerCapture(e.pointerId); } catch { /* old webview */ }
-      el.classList.add('pressed');
-      walk.btnDown(bid, zone);
+      press();
     });
-    const release = () => { el.classList.remove('pressed'); walk.btnUp(bid); };
     el.addEventListener('pointerup', release);
     el.addEventListener('pointercancel', release);
+    // touch twin of the pointer path — same synthetic id, so firing twice is
+    // a no-op; rescues webviews that drop the pointer stream mid-hold
+    el.addEventListener('touchstart', e => { e.preventDefault(); press(); }, { passive: false });
+    el.addEventListener('touchend', release);
+    el.addEventListener('touchcancel', release);
     el.addEventListener('contextmenu', e => e.preventDefault()); // a long-press menu would eat the pointerup
     return { el, bid };
   });

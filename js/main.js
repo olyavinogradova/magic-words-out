@@ -124,10 +124,23 @@ const voiceReady = voice.init();
 art.load();
 const updateControls = initControls(walk); // phone buttons — after art.load(), the art swap keys on it
 
+// Fullscreen must be asked inside the start gesture; iPhone Safari has no
+// element fullscreen (home-screen app mode covers it) — an absent or failed
+// call stays silent.
+function goFullscreen() {
+  if (!matchMedia('(pointer: coarse)').matches) return;
+  const el = document.documentElement;
+  const ask = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (ask) Promise.resolve(ask.call(el)).catch(() => {});
+}
+// an iOS pinch gesture would rescale the whole stage — kill it at the source
+document.addEventListener('gesturestart', e => e.preventDefault());
+
 function startGame() {
   started = true; // draw the players again + lift the scene blur
   canvas.classList.remove('blur');
   voice.unlock();
+  goFullscreen();
   voiceReady.then(() => walk.begin());
 }
 
@@ -147,11 +160,14 @@ function tick(now) {
   last = now;
   const t = now / 1000;
 
-// self-heal viewport capture: some webviews settle their size after load
-// without firing a resize event — W drives the encounter trigger, so a
-// stale value misplaces it
+// self-heal viewport capture: some webviews settle their size (and dpr)
+// after load without firing a resize event — W drives the encounter
+// trigger, so a stale value misplaces it; the canvas term catches a
+// backing store left stale by a transient state during load
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
   if ((FORCE_W || window.innerWidth) !== innerW ||
-      (FORCE_H || window.innerHeight) !== innerH) resize();
+      (FORCE_H || window.innerHeight) !== innerH ||
+      canvas.width !== Math.round(view.W * dpr * view.s)) resize();
 
   updateTweens(dt);
   ui.update(dt);

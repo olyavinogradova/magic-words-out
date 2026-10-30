@@ -116,26 +116,9 @@ export class Walk {
     };
   }
 
-  // --- input (pointer zones + keyboard + test API all merge here)
-  hitZone(x, y, W, H) {
-// the canvas zones stay buttonless: the whole half walks; the on-screen
-// arrows/jump live in the DOM corners (js/controls.js), only on touch
-    return x < W / 2 ? 'left' : 'right';
-  }
-
-  pointerDown(id, x, y, W, H) {
-    if (this.phase !== 'walk') return false;
-    this.pointers.set(id, this.hitZone(x, y, W, H));
-    this.applyInputs();
-    return true;
-  }
-
-  pointerMove(id, x, y, W, H) {
-    if (this.pointers.has(id)) this.pointers.set(id, this.hitZone(x, y, W, H));
-    this.applyInputs();
-  }
-
-  pointerUp(id) { this.pointers.delete(id); this.applyInputs(); }
+  // --- input (buttons + keyboard + test API all merge here; canvas touches
+  // steer nothing — the on-screen buttons (js/controls.js) are the only
+  // touch controls, and their hit rings live in the CSS)
 
 // on-screen control buttons (js/controls.js) hold a zone by a synthetic
 // string id — the touch path, so startArrive()'s pointers.clear() releases

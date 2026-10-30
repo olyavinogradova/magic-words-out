@@ -1,10 +1,11 @@
 // input.js — unified pointer/touch + keyboard.
-// While walking: hold a screen half to walk (phones also get the corner
-// buttons, js/controls.js); jump is keyboard-only on desktop — Space / ⬆ /
-// W. On the start screen Space/Enter press the cover's cloud button
-// (⬆/W deliberately don't). During the encounter: taps hit word
-// stones; Enter or a jump key (Space/⬆/W) taps the active stone (desktop)
-// — the kid never needs the touchpad.
+// While walking the only touch controls are the on-screen buttons
+// (js/controls.js) with their hit rings; canvas touches steer nothing.
+// Jump is keyboard-only on desktop — Space / ⬆ / W. On the start screen
+// Space/Enter press the cover's cloud button (⬆/W deliberately don't).
+// During the encounter: taps hit word stones; Enter or a jump key
+// (Space/⬆/W) taps the active stone (desktop) — the kid never needs
+// the touchpad.
 import { view, toVirtual } from './view.js';
 
 export function initInput(canvas, ui, walk) {
@@ -15,25 +16,13 @@ export function initInput(canvas, ui, walk) {
     return { x: v.x, y: v.y, w: view.W, h: view.H };
   };
 
+  // canvas taps reach word stones only (the tap-ready fallback when the
+  // kid cannot pronounce the phrase); walking is buttons-only
   canvas.addEventListener('pointerdown', e => {
-    const { x, y, w, h } = pos(e);
-    if (walk.active() && walk.pointerDown(e.pointerId, x, y, w, h)) {
-      e.preventDefault();
-      return;
-    }
-    const hit = ui.hit(x, y);
+    const v = pos(e);
+    const hit = ui.hit(v.x, v.y);
     if (hit) { e.preventDefault(); hit.cb(); }
   }, { passive: false });
-
-  window.addEventListener('pointermove', e => {
-    if (!walk.active()) return;
-    const { x, y, w, h } = pos(e);
-    walk.pointerMove(e.pointerId, x, y, w, h);
-  });
-
-  const release = e => { if (walk.active()) walk.pointerUp(e.pointerId); };
-  window.addEventListener('pointerup', release);
-  window.addEventListener('pointercancel', release);
 
   const KEYMAP = {
     ArrowLeft: 'left', KeyA: 'left',

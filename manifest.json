@@ -1,0 +1,11 @@
+{
+  "name": "Words magic («Магия слов»)",
+  "short_name": "Words magic",
+  "lang": "ru",
+  "background_color": "#D2E2E9",
+  "theme_color": "#D2E2E9",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

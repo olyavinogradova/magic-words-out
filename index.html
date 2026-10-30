@@ -2,11 +2,16 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#D2E2E9">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="Words magic">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
 <title>Words magic</title>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700&display=swap" rel="stylesheet">
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #D2E2E9; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #D2E2E9;
+               touch-action: none; overscroll-behavior: none; }
   /* The whole game renders into a VIRTUAL landscape stage (js/view.js):
      scaled to the real screen, rotated 90° on portrait phones. Canvas and
      overlays size in stage px — the transform does the rest. */
@@ -58,22 +63,32 @@
                     transition: opacity .08s; pointer-events: none; }
   #coverBtn.pressed .veil { opacity: 1; }
   #coverBtn.pressed span { transform: translate(-50%, -60%); }
-  /* Phone touch controls (js/controls.js): DOM INSIDE the stage so they
-     rotate/scale with it; sizes use --u (1 real screen px in stage units,
-     set by js/view.js) — the visible circle is 70 screen px inside a 96 px
-     hit box (>= the 44 pt touch minimum), corner insets clear the screen
-     edge and home indicator. Pressed = darken + sink (UI.md button recipe).
-     Art = the buttons sheet; no art -> the procedural SVG arrows stay. */
-  #stage { --u: 1px; }
+  /* Phone touch controls (js/controls.js): DOM inside the stage so they
+     rotate/scale with it. Sized in STAGE px — not screen px — so on every
+     screen they sit INSIDE the soil strip below the land line (land at 738,
+     feet at 756 of the 900-unit stage): disc top 762 stays under the feet.
+     At phone scale the visible 74 px circle keeps its lower edge ~18 real
+     px above the screen bottom (clears the iOS home indicator) and the 118
+     px disc stays >= 44 pt on any real phone. They are the ONLY touch
+     controls: canvas touches steer nothing (no screen halves). #controls
+     covers the stage and stays pointer-events:none (canvas taps must pass
+     through to the canvas, where only word stones listen); each .ctl must
+     re-enable pointer-events:auto — inherited none makes the buttons
+     untouchable and taps fall through. The ring around the art presses
+     (border-radius clips hit-testing to the disc) and each button carries
+     a 3x invisible hit patch below. Pressed = darken + sink (UI.md button
+     recipe). Art = the buttons sheet (~450 px sources, downscaled); no art
+     -> the SVG arrows. */
   #controls { position: absolute; inset: 0; z-index: 5;
               display: none; pointer-events: none; }
   #controls.on { display: block; }
   .ctl {
     position: absolute; box-sizing: border-box;
-    width: calc(96 * var(--u)); height: calc(96 * var(--u));
-    padding: calc(13 * var(--u));
+    width: 118px; height: 118px;
+    padding: 22px;
     border: 0; border-radius: 50%; background: none; box-shadow: none;
-    cursor: pointer; touch-action: none;
+    cursor: pointer; touch-action: none; pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
     transition: transform .08s, filter .08s;
   }
@@ -84,10 +99,18 @@
   .ctl.art svg { display: none; }
   .ctl path { stroke: #2B2524; stroke-width: 11; fill: none;
               stroke-linecap: round; stroke-linejoin: round; }
-  .ctl.pressed { filter: brightness(.78); transform: translateY(calc(3 * var(--u))); }
-  #ctlLeft  { left:  calc(48 * var(--u));  bottom: calc(44 * var(--u)); }
-  #ctlRight { left:  calc(162 * var(--u)); bottom: calc(44 * var(--u)); }
-  #ctlJump  { right: calc(48 * var(--u));  bottom: calc(44 * var(--u)); }
+  .ctl.pressed { filter: brightness(.78); transform: translateY(3px); }
+  #ctlLeft  { left: 40px;  bottom: 20px; }
+  #ctlRight { left: 174px; bottom: 20px; }
+  #ctlJump  { right: 40px; bottom: 20px; }
+  /* Invisible hit patches (author-approved shapes): the ring is 3x (66 px)
+     on the free sides and 8 px toward the sibling arrow, so back/fwd meet
+     without overlapping; screen edges clip the rest. A pseudo-element is
+     part of the button, so a touch anywhere in the patch presses it. */
+  .ctl::before { content: ''; position: absolute; }
+  #ctlLeft::before  { left: -66px; top: -66px; right: -8px;  bottom: -66px; border-radius: 40px; }
+  #ctlRight::before { left: -8px;  top: -66px; right: -66px; bottom: -66px; border-radius: 40px; }
+  #ctlJump::before  { left: -66px; top: -66px; right: -66px; bottom: -66px; border-radius: 50%; }
   .card {
     background: #F5EBDD; border: 0.6px solid #2B2524; border-radius: 28px;
     padding: 34px 46px; text-align: center;
